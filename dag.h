@@ -412,25 +412,24 @@ namespace s3d_graph
                graph.get_all_nodes().size())
             {
                 out = graph.get_all_nodes();
-            }
 
-            // Remove everything in the before & after vectors, along
-            // with the input.
-            out.erase(
-                std::remove_if(
-                    out.begin(),
-                    out.end(),
-                    [&before, &after, node_id](auto n)
-                    {
-                        return 
-                            (n == node_id) ||
-                            std::binary_search(
-                                before.begin(), before.end(), n) ||
-                            std::binary_search(
-                                after.begin(), after.end(), n);
-                    }),
-                    out.end());
-                    
+                // Remove everything in the before & after vectors, along
+                // with the input.
+                out.erase(
+                    std::remove_if(
+                        out.begin(),
+                        out.end(),
+                        [&before, &after, node_id](auto n)
+                        {
+                            return 
+                                (n == node_id) ||
+                                std::binary_search(
+                                    before.begin(), before.end(), n) ||
+                                std::binary_search(
+                                    after.begin(), after.end(), n);
+                        }),
+                        out.end());
+            }
             return true;
         }
         else
