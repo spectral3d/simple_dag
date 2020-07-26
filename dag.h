@@ -246,7 +246,7 @@ namespace s3d_graph
             }
         }
 
-        // true if we have a
+        // true if we have a DAG.
         bool            m_valid;
 
         // We keep two copies of the edges for efficient searches up and down
