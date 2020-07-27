@@ -1,4 +1,5 @@
 #include "dag.h"
+#include "algorithms.h"
 #include <cstdio>
 
 int main(int, char **)
