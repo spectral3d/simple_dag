@@ -51,9 +51,33 @@ int main(int, char **)
     
     {
         std::vector<uint32_t> before;
+        find_before(graph, 2u, before);
+
+        printf("\nnodes before 2 (expect 1) : \n");
+
+        for(auto &n : before)
+        {
+            printf("%i\n", n);
+        }
+    }
+
+    {
+        std::vector<uint32_t> before;
+        find_before(graph, 4u, before);
+
+        printf("\nnodes before 4 (expect 2, 3) : \n");
+
+        for(auto &n : before)
+        {
+            printf("%i\n", n);
+        }
+    }
+
+    {
+        std::vector<uint32_t> before;
         find_all_before(graph, 2u, before);
 
-        printf("\nnodes before 2 (expect 0, 1) : \n");
+        printf("\nall nodes before 2 (expect 0, 1) : \n");
         for(auto &n : before)
         {
             printf("%i\n", n);
@@ -64,8 +88,32 @@ int main(int, char **)
         std::vector<uint32_t> before;
         find_all_before(graph, 3u, before);
 
-        printf("\nnodes before 3 (expect 0) : \n");
+        printf("\nall nodes before 3 (expect 0) : \n");
         for(auto &n : before)
+        {
+            printf("%i\n", n);
+        }
+    }
+
+    {
+        std::vector<uint32_t> after;
+        find_after(graph, 2u, after);
+
+        printf("\nnodes after 2 (expect 4) : \n");
+
+        for(auto &n : after)
+        {
+            printf("%i\n", n);
+        }
+    }
+
+    {
+        std::vector<uint32_t> after;
+        find_after(graph, 0u, after);
+
+        printf("\nnodes after 0 (expect 1, 3) : \n");
+
+        for(auto &n : after)
         {
             printf("%i\n", n);
         }
@@ -75,7 +123,7 @@ int main(int, char **)
         std::vector<uint32_t> after;
         find_all_after(graph, 2u, after);
 
-        printf("\nnodes after 2 (expect 4) : \n");
+        printf("\nall nodes after 2 (expect 4) : \n");
         for(auto &n : after)
         {
             printf("%i\n", n);

@@ -7,8 +7,90 @@ namespace s3d_graph
 {
     // Algorithms that operate on directed graphs. 
 
-    // Given a dag and a node, what nodes have edges leading to this node?
+    // Given a dag and a node, what nodes have edges leading directly to this
+    // node?
     // output will be sorted by node id.
+    template<typename T>
+    bool find_before(
+            dag<T> const &graph,
+            T node_id,
+            typename dag<T>::node_id_vector &out)
+    {
+        using node_id_vector    = typename dag<T>::node_id_vector;
+
+        out.clear();
+
+        // Ensure the graph is valid.  We don't actually care if it
+        // contains this node.   
+        if(graph.get_valid())
+        {
+            auto &edges = graph.get_edges_by_dst();
+
+            auto edge_it = std::lower_bound(
+                edges.begin(),
+                edges.end(),
+                node_id,
+                [](auto &e, auto &n) { return e.get_dst() < n; });
+
+            while ((edge_it != edges.end()) &&
+                   (edge_it->get_dst() == node_id))
+            {
+                out.emplace_back(edge_it->get_src());
+                ++edge_it;
+            }
+
+            std::sort(out.begin(), out.end());
+            out.erase(std::unique(out.begin(), out.end()), out.end());
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // Given a dag and a node, what nodes have edges leading directly from this
+    // node?
+    // output will be sorted by node id.
+    template<typename T>
+    bool find_after(
+            dag<T> const &graph,
+            T node_id,
+            typename dag<T>::node_id_vector &out)
+    {
+        using node_id_vector    = typename dag<T>::node_id_vector;
+
+        out.clear();
+
+        // Ensure the graph is valid.  We don't actually care if it
+        // contains this node.   
+        if(graph.get_valid())
+        {
+            auto &edges = graph.get_edges_by_src();
+
+            auto edge_it = std::lower_bound(
+                edges.begin(),
+                edges.end(),
+                node_id,
+                [](auto &e, auto &n) { return e.get_src() < n; });
+
+            while ((edge_it != edges.end()) &&
+                   (edge_it->get_src() == node_id))
+            {
+                out.emplace_back(edge_it->get_dst());
+                ++edge_it;
+            }
+
+            std::sort(out.begin(), out.end());
+            out.erase(std::unique(out.begin(), out.end()), out.end());
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+ 
     template<typename T>
     bool find_all_before(
             dag<T> const &graph,
