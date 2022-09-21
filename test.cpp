@@ -155,6 +155,7 @@ int main(int, char **)
     {
         std::vector<uint32_t> done = {0};
         std::vector<uint32_t> next;
+
         find_current_tasks(graph, done, next);
 
         printf("\nrun tasks after 0 (expect 1, 3) : \n");
@@ -168,6 +169,7 @@ int main(int, char **)
     {
         std::vector<uint32_t> done = {0, 1};
         std::vector<uint32_t> next;
+        
         find_current_tasks(graph, done, next);
 
         printf("\nrun tasks after 0, 1 (expect 2, 3) : \n");

@@ -6,6 +6,7 @@
 #include <iterator>
 #include <type_traits>
 #include <vector>
+#include <queue>
 
 namespace s3d_graph
 {
@@ -174,71 +175,133 @@ namespace s3d_graph
         // Sort into topological order if possible.
         void topological_sort()
         {
-            edge_vector remaining_edges(m_edges_by_dst);
-            node_id_vector remaining_nodes(m_all_nodes);
-            node_id_vector to_go;
-
             m_sorted_nodes.clear();
 
             // Empty graph is valid.
             m_valid = true;
 
-            while(m_valid && !remaining_nodes.empty())
+            using count_record = std::pair<node_id_type, size_t>;
+
+            std::vector<count_record> incoming_counts;
+
+            incoming_counts.reserve(m_all_nodes.size());
+
+            std::transform(
+                m_all_nodes.begin(),
+                m_all_nodes.end(),
+                std::back_inserter(incoming_counts),
+                [](node_id_type const &id)->count_record
+                { return {id, size_t(0)}; });
+
+            // Initialise count of incoming edges.
+            std::for_each(
+                m_edges_by_dst.begin(),
+                m_edges_by_dst.end(),
+                [&incoming_counts](auto &edge)
+                {
+                    auto it = std::lower_bound(
+                        incoming_counts.begin(),
+                        incoming_counts.end(),
+                        edge.get_dst(),
+                        [](auto &count, auto &id)
+                        {
+                            return count.first < id;
+                        });
+
+                    ++it->second;
+                });
+                
+            std::queue<node_id_type> to_process;
+
+            for(auto &count : incoming_counts)
             {
-                to_go.clear();
-                m_valid = false;
-
-                for(auto &node : remaining_nodes)
+                // Find "root" vertices of graph.
+                if(count.second == 0)
                 {
-                    // Find nodes
-                    auto edge_it = std::lower_bound(
-                        remaining_edges.begin(),
-                        remaining_edges.end(),
-                        node,
-                        [](auto &e, auto &n) { return e.get_dst() < n; });
+                    m_sorted_nodes.emplace_back(count.first);
 
-                    if(!((edge_it != remaining_edges.end()) &&
-                        (edge_it->get_dst() == node)))
-                    {
-                        // push this node to the output and tag it as to be
-                        // removed.
-                        m_sorted_nodes.push_back(node);
-                        to_go.push_back(node);
-                        m_valid = true;
-                    }
-                }
+                    // Find edges from these vertices and add their destinations
+                    // to output.
+                    auto begin_it = std::lower_bound(
+                        m_edges_by_src.begin(),
+                        m_edges_by_src.end(),
+                        count.first,
+                        [](auto &edge, auto &id)
+                        {
+                            return edge.get_src() < id;
+                        });
 
-                if(!to_go.empty())
-                {
-                    // First remove processed nodes.
-                    remaining_nodes.erase(
-                        std::remove_if(
-                            remaining_nodes.begin(),
-                            remaining_nodes.end(),
-                            [&to_go](auto &n)
-                            {
-                                return std::binary_search(
-                                    to_go.begin(),
-                                    to_go.end(),
-                                    n);
-                            }),
-                        remaining_nodes.end());
+                    auto end_it = std::upper_bound(
+                        m_edges_by_src.begin(),
+                        m_edges_by_src.end(),
+                        count.first,
+                        [](auto &id, auto &edge)
+                        {
+                            return id < edge.get_src();
+                        });
 
-                    // Now remove edges coming from these nodes.
-                    remaining_edges.erase(
-                        std::remove_if(
-                            remaining_edges.begin(),
-                            remaining_edges.end(),
-                            [&to_go](auto &e)
-                            {
-                                return std::binary_search(
-                                    to_go.begin(),
-                                    to_go.end(),
-                                    e.get_src());
-                            }),
-                        remaining_edges.end());
+                    std::for_each(
+                        begin_it,
+                        end_it,
+                        [&to_process](auto &edge)
+                        {
+                            to_process.push(edge.get_dst());
+                        });
                 }
             }
+
+            while(!to_process.empty())
+            {
+                auto next_vertex = to_process.front();
+
+                to_process.pop();
+
+                auto count_it = std::lower_bound(
+                    incoming_counts.begin(),
+                    incoming_counts.end(),
+                    next_vertex,
+                    [](auto &count, auto &id)
+                    {
+                        return count.first < id;
+                    });
+
+                auto &count = *count_it;
+
+                if(--count.second == 0)
+                {
+                    m_sorted_nodes.emplace_back(count.first);
+
+                    // Find edges from these vertices and add their destinations
+                    // to output.
+                    auto begin_it = std::lower_bound(
+                        m_edges_by_src.begin(),
+                        m_edges_by_src.end(),
+                        count.first,
+                        [](auto &edge, auto &id)
+                        {
+                            return edge.get_src() < id;
+                        });
+
+                    auto end_it = std::upper_bound(
+                        m_edges_by_src.begin(),
+                        m_edges_by_src.end(),
+                        count.first,
+                        [](auto &id, auto &edge)
+                        {
+                            return id < edge.get_src();
+                        });
+
+                    std::for_each(
+                        begin_it,
+                        end_it,
+                        [&to_process](auto &edge)
+                        {
+                            to_process.push(edge.get_dst());
+                        });
+                }
+            }
+
+            m_valid = (m_sorted_nodes.size() == m_all_nodes.size());
 
             if(!m_valid)
             {

@@ -16,8 +16,6 @@ namespace s3d_graph
             T node_id,
             typename dag<T>::node_id_vector &out)
     {
-        using node_id_vector    = typename dag<T>::node_id_vector;
-
         out.clear();
 
         // Ensure the graph is valid.  We don't actually care if it
@@ -58,8 +56,6 @@ namespace s3d_graph
             T node_id,
             typename dag<T>::node_id_vector &out)
     {
-        using node_id_vector    = typename dag<T>::node_id_vector;
-
         out.clear();
 
         // Ensure the graph is valid.  We don't actually care if it
@@ -318,19 +314,19 @@ namespace s3d_graph
                 std::remove_if(
                     out.begin(),
                     out.end(),
-                    [&edges](auto &n)
+                    [&edges](auto &id)->bool
                     {
                         auto e_it = std::lower_bound(
                             edges.begin(),
                             edges.end(),
-                            n,
-                            [](auto &e, auto &n)
+                            id,
+                            [](auto &e, auto &dst_id)->bool
                             {
-                                return e.get_dst() < n;
+                                return e.get_dst() < dst_id;
                             });
 
                         return  (e_it != edges.end()) &&
-                                (e_it->get_dst() == n);
+                                (e_it->get_dst() == id);
                     }),
                 out.end());                     
 
